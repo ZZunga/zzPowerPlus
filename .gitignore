@@ -1,0 +1,11 @@
+# Connect IQ 빌드 산출물
+bin/
+gen/
+*.prg
+*.prg.debug.xml
+*.iq
+
+# 서명 키
+developer_key
+developer_key.der
+*.pem

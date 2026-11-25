@@ -1,0 +1,22 @@
+<resources>
+    <!-- source/zzPowerPlusView.mc 의 createField id 와 1:1 -->
+    <fitContributions>
+        <fitField id="0" displayInChart="true" sortOrder="0" precision="1"
+                  chartTitle="@Strings.fitZone" dataLabel="@Strings.fitZone"
+                  unitLabel="@Strings.fitZoneUnit" fillColor="#FF5500"/>
+        <fitField id="1" displayInActivitySummary="true" sortOrder="1" precision="0"
+                  dataLabel="@Strings.fitZ1" unitLabel="@Strings.fitPct"/>
+        <fitField id="2" displayInActivitySummary="true" sortOrder="2" precision="0"
+                  dataLabel="@Strings.fitZ2" unitLabel="@Strings.fitPct"/>
+        <fitField id="3" displayInActivitySummary="true" sortOrder="3" precision="0"
+                  dataLabel="@Strings.fitZ3" unitLabel="@Strings.fitPct"/>
+        <fitField id="4" displayInActivitySummary="true" sortOrder="4" precision="0"
+                  dataLabel="@Strings.fitZ4" unitLabel="@Strings.fitPct"/>
+        <fitField id="5" displayInActivitySummary="true" sortOrder="5" precision="0"
+                  dataLabel="@Strings.fitZ5" unitLabel="@Strings.fitPct"/>
+        <fitField id="6" displayInActivitySummary="true" sortOrder="6" precision="0"
+                  dataLabel="@Strings.fitZ6" unitLabel="@Strings.fitPct"/>
+        <fitField id="7" displayInActivitySummary="true" sortOrder="7" precision="0"
+                  dataLabel="@Strings.fitZ7" unitLabel="@Strings.fitPct"/>
+    </fitContributions>
+</resources>

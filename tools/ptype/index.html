@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>zzPowerPlus 운동 형태 판정기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&family=Titillium+Web:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* zzHeartPlus 운동 형태 분석기와 같은 짜임: 왼쪽 입력, 오른쪽 판정·형태 목록, 아래 문턱값·기기 미리보기·상수. */
+:root {
+  --bg: #F4F5F7; --panel: #FFFFFF; --ink: #1D2030; --muted: #646A7E; --line: #DDE0E7; --accent: #7B2FD0;
+  --ok: #138A4A;
+  --z1: #555555; --z2: #0000FF; --z3: #00AA00; --z4: #FFAA00; --z5: #FF5500; --z6: #FF0000; --z7: #AA00FF;
+  --font-display: "Titillium Web", "Segoe UI", sans-serif;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111318; --panel: #1A1D24; --ink: #E9EBF1; --muted: #9AA0B2; --line: #2C303A; --accent: #B985FF; --ok: #3BCB7A;
+    --z1: #AAAAAA; --z2: #00AAFF; --z3: #00FF00; --z4: #FFAA00; --z5: #FF5500; --z6: #FF0000; --z7: #FF55FF;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 48px; display: grid; gap: 20px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+h1 { font: 700 26px/1.2 var(--font-display); margin: 0; letter-spacing: .2px; }
+h1 span { color: var(--accent); }
+header p { margin: 0; color: var(--muted); }
+h2 { font: 600 15px/1.3 var(--font-body); margin: 0 0 12px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+.grid { display: grid; grid-template-columns: minmax(300px, 390px) 1fr; gap: 20px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.chip { font: 500 13px var(--font-body); border: 1px solid var(--line); background: transparent; color: var(--ink);
+  border-radius: 999px; padding: 5px 11px; cursor: pointer; }
+.chip:hover { border-color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.zone { display: grid; grid-template-columns: 54px 1fr 64px 42px; gap: 10px; align-items: center; margin: 7px 0; }
+.zone b { font: 700 15px var(--font-display); }
+.zone b small { display: block; font: 500 11px var(--font-body); color: var(--muted); }
+.zone input[type=range] { width: 100%; }
+input[type=number] { width: 64px; font: 14px var(--font-body); padding: 4px 6px; border: 1px solid var(--line);
+  border-radius: 6px; background: var(--bg); color: var(--ink); font-variant-numeric: tabular-nums; }
+.zone .pct { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+.sep { border-top: 1px dashed var(--line); margin: 10px 0 4px; padding-top: 6px; color: var(--muted); font-size: 12.5px; }
+.total { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; color: var(--muted); }
+.total strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.hint { color: var(--muted); font-size: 12.5px; margin: 6px 0 0; }
+
+.verdict { padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.verdict .tag { font: 700 30px/1.25 var(--font-display), var(--font-body); }
+.verdict .tag .ko { font: 600 22px var(--font-body); }
+.verdict .desc { color: var(--muted); margin-top: 2px; }
+.verdict .also { font-size: 13px; margin-top: 6px; }
+.pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-left: 8px; vertical-align: 4px;
+  background: color-mix(in srgb, var(--muted) 22%, transparent); }
+.bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; height: 120px; align-items: end; margin: 16px 0 4px; }
+.bars span { border-radius: 3px 3px 0 0; min-height: 1px; }
+.bars-l { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; font-size: 12px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+
+.types { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 4px; }
+.types li { display: grid; grid-template-columns: 22px 92px 1fr 110px; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; }
+.types li.best { background: color-mix(in srgb, var(--accent) 11%, transparent); }
+.types .no { color: var(--muted); font: 600 12px var(--font-display); text-align: right; }
+.types .k { font: 700 15px var(--font-display); }
+.types .n { font-size: 13.5px; }
+.types .n small { display: block; color: var(--muted); font-size: 12px; }
+.meter { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--muted); }
+.types li.ok .meter i { background: var(--ok); }
+.types .m { display: grid; gap: 3px; font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+.th { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px 22px; }
+.th label { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13.5px; }
+.th label span small { color: var(--muted); }
+
+.dev { display: grid; grid-template-columns: minmax(280px, 480px) 1fr; gap: 24px; align-items: start; }
+@media (max-width: 860px) { .dev { grid-template-columns: 1fr; } }
+canvas { width: 100%; max-width: 480px; height: auto; border-radius: 8px; border: 1px solid var(--line); display: block; }
+pre { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; font: 12.5px/1.5 ui-monospace, Consolas, monospace; overflow-x: auto; }
+.copy { font: 600 13px var(--font-body); border: 0; border-radius: 8px; padding: 7px 14px; background: var(--accent); color: #fff; cursor: pointer; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font: 500 13px var(--font-body); border: 0; background: transparent; color: var(--ink); padding: 5px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 10px 0; }
+.copy:focus-visible, .chip:focus-visible, .seg button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.foot { color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>zzPowerPlus <span>운동 형태</span> 판정기</h1>
+    <p>파워 존별 시간을 넣으면 Riduck Animal Friends 기준으로 운동 형태를 판정합니다.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="in-h">
+      <h2 id="in-h">존별 시간 (분)</h2>
+      <div class="presets" id="presets"></div>
+      <div id="zones"></div>
+      <div class="total"><span>기록 시간</span><strong id="total">0분</strong></div>
+      <p class="hint">FTP 기준 7존. 스윗스팟(88~95%)은 Z3·Z4 안에서, 200% 이상은 Z7 안에서 따로 센 시간입니다.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="out-h">
+      <h2 id="out-h">판정</h2>
+      <div class="verdict" id="verdict"></div>
+      <div class="bars" id="bars" aria-label="존별 시간 비율"></div>
+      <div class="bars-l" id="barsl"></div>
+      <ol class="types" id="types"></ol>
+      <p class="hint">위에서부터 우선순위. 조건을 다 채운 것(초록) 중 가장 위가 판정입니다. 스프린트·타바타·HIIT·VO2MAX가 함께 맞으면 문턱을 가장 많이 넘긴 쪽을 고릅니다.</p>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="th-h">
+    <h2 id="th-h">문턱값 <span class="hint" style="font-weight:400">— 바꾸면 바로 다시 판정합니다</span></h2>
+    <div class="th" id="th"></div>
+    <div class="row"><button type="button" class="chip" id="reset">기본값으로</button></div>
+  </section>
+
+  <section class="panel dev" aria-labelledby="dev-h">
+    <div>
+      <canvas id="dev" width="480" height="399" aria-label="Edge 1050 넓고 높은 칸 미리보기"></canvas>
+      <div class="row">
+        <span class="seg" role="group" aria-label="배경">
+          <button type="button" id="bg-l" aria-pressed="true">흰 배경</button>
+          <button type="button" id="bg-d" aria-pressed="false">검정 배경</button>
+        </span>
+      </div>
+    </div>
+    <div>
+      <h2 id="dev-h">기기 화면 (Edge 1050/1060 넓고 높은 칸 480×399, 심박앱과 같은 배치)</h2>
+      <ul>
+        <li>위: 타이틀, 현재 파워와 평균, 그 아래 한 줄에 운동 형태 <b>SST - 스윗스팟</b>.</li>
+        <li>아래: 7존 시간 % 히스토그램과 존 띠.</li>
+        <li>기록이 최소 시간보다 짧으면 <b>분석 중</b>.</li>
+      </ul>
+      <h2 style="margin-top:18px">Monkey C 상수</h2>
+      <div class="row"><button type="button" class="copy" id="copy">상수 복사</button><span class="hint" id="copied" aria-live="polite"></span></div>
+      <pre id="mc"></pre>
+    </div>
+  </section>
+
+  <p class="foot">기준은 Riduck "Animal Friends" 안내문(동물 13종, 순록 피라미드 제외)을 파워 존으로 옮긴 것입니다. 낙타의 "노란 존"은 개인 대사 분석 값이라 Z2로 대신합니다. 오리(일상 라이딩)는 다른 조건에 하나도 안 맞을 때 나옵니다.</p>
+</div>
+
+<script src="classify.js"></script>
+<script>
+const ZN = ["Z1", "Z2", "Z3", "Z4", "Z5", "Z6", "Z7"];
+const ZR = ["~55%", "56~75", "76~90", "91~105", "106~120", "121~150", "150%~"];
+const TH_LABELS = {
+  minMinutes: ["분석 시작", "분"],
+  recMin: ["회복: 최소 시간", "분"], recZ1: ["회복: Z1 비율", "% 이상"], recHiMax: ["회복: Z3 이상", "% 이하"],
+  baseMin: ["베이스: 최소 시간", "분"], baseLow: ["베이스·FATMAX: Z1+Z2", "% 이상"], baseZ2: ["베이스: Z2 비율", "% 이상"],
+  fatMin: ["FATMAX: 최소 시간", "분"], fatZ2: ["FATMAX: Z2 비율", "% 이상"],
+  tempoZ3: ["템포: Z3 시간", "분 이상"], sstMin: ["SST: 88~95% 시간", "분 이상"],
+  vo2Z5: ["VO2MAX: Z5 시간", "분 이상"], hiitZ6: ["HIIT: Z6 시간", "분 이상"], tabZ7: ["타바타: Z7 시간", "분 이상"], sprNm: ["스프린트: 200%↑ 시간", "분 이상"],
+  raceHi: ["레이스: Z4~Z7 합", "% 이상"], raceEach: ["레이스: Z4·5·6·7 각각", "% 이상"],
+  polMin: ["양극화: 최소 시간", "분"], polLow: ["양극화: Z1+Z2", "% 이상"], polHi: ["양극화: Z5 이상", "% 이상"], polMid: ["양극화: Z3+Z4", "% 이하"],
+  balEach: ["자유: 모든 존", "% 이상"], balMax: ["자유: 한 존 최대", "% 이하"]
+};
+
+const state = { z: PRESETS[0].z.slice(), ss: PRESETS[0].ss, nm: PRESETS[0].nm, t: { ...DEFAULTS }, preset: 0, dark: false };
+const fmtMin = m => m >= 60 ? `${Math.floor(m / 60)}시간 ${Math.round(m % 60)}분` : `${+m.toFixed(1)}분`;
+const zc = () => [1, 2, 3, 4, 5, 6, 7].map(i => getComputedStyle(document.documentElement).getPropertyValue("--z" + i).trim());
+const label = b => `${b.key} - ${b.ko}`;
+
+// ---- 입력 ----
+const pz = document.getElementById("presets");
+PRESETS.forEach((p, i) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = p.name; b.id = "preset-" + i;
+  b.addEventListener("click", () => { state.z = p.z.slice(); state.ss = p.ss; state.nm = p.nm; state.preset = i; sync(); });
+  pz.appendChild(b);
+});
+const zw = document.getElementById("zones");
+function zoneRow(id, title, sub, color, max, step, get, set) {
+  const row = document.createElement("div");
+  row.className = "zone";
+  row.innerHTML = `<b style="color:${color}">${title}<small>${sub}</small></b>
+    <input type="range" id="r-${id}" min="0" max="${max}" step="${step}" aria-label="${title} 분">
+    <input type="number" id="n-${id}" min="0" max="600" step="${step}" aria-label="${title} 분 직접 입력">
+    <span class="pct" id="p-${id}"></span>`;
+  zw.appendChild(row);
+  const on = e => { set(Math.max(0, +e.target.value || 0)); state.preset = -1; sync(); };
+  row.querySelector("#r-" + id).addEventListener("input", on);
+  row.querySelector("#n-" + id).addEventListener("input", on);
+  return () => {
+    row.querySelector("#r-" + id).value = Math.min(max, get());
+    const n = row.querySelector("#n-" + id);
+    if (document.activeElement !== n) n.value = get();
+  };
+}
+const syncers = [];
+ZN.forEach((z, i) => syncers.push(zoneRow("z" + i, z, ZR[i], `var(--z${i + 1})`, 180, 1, () => state.z[i], v => state.z[i] = v)));
+const sep = document.createElement("div"); sep.className = "sep"; sep.textContent = "따로 세는 시간 (위 존 안에 포함)"; zw.appendChild(sep);
+syncers.push(zoneRow("ss", "SS", "88~95%", "var(--z4)", 120, 1, () => state.ss, v => state.ss = v));
+syncers.push(zoneRow("nm", "NM", "200%~", "var(--z7)", 10, 0.1, () => state.nm, v => state.nm = v));
+
+const thw = document.getElementById("th");
+Object.keys(DEFAULTS).forEach(k => {
+  const [name, unit] = TH_LABELS[k] || [k, ""];
+  const l = document.createElement("label");
+  l.innerHTML = `<span>${name} <small>${unit}</small></span><input type="number" id="t-${k}" min="0" max="600" step="any">`;
+  thw.appendChild(l);
+  l.querySelector("input").addEventListener("input", e => { state.t[k] = Math.max(0, +e.target.value || 0); render(); });
+});
+document.getElementById("reset").addEventListener("click", () => { state.t = { ...DEFAULTS }; sync(); });
+function seg(aId, bId, onA, onB) {
+  const a = document.getElementById(aId), b = document.getElementById(bId);
+  a.addEventListener("click", () => { onA(); a.setAttribute("aria-pressed", "true"); b.setAttribute("aria-pressed", "false"); render(); });
+  b.addEventListener("click", () => { onB(); b.setAttribute("aria-pressed", "true"); a.setAttribute("aria-pressed", "false"); render(); });
+}
+seg("bg-l", "bg-d", () => state.dark = false, () => state.dark = true);
+
+function sync() {
+  syncers.forEach(f => f());
+  Object.keys(DEFAULTS).forEach(k => { const n = document.getElementById("t-" + k); if (document.activeElement !== n) n.value = state.t[k]; });
+  PRESETS.forEach((p, i) => document.getElementById("preset-" + i).setAttribute("aria-pressed", String(i === state.preset)));
+  render();
+}
+
+// ---- 결과 ----
+function render() {
+  const r = classify({ z: state.z, ss: state.ss, nm: state.nm }, state.t);
+  const colors = zc();
+  ZN.forEach((_, i) => document.getElementById("p-z" + i).textContent = r.pct[i].toFixed(0) + "%");
+  document.getElementById("p-ss").textContent = "";
+  document.getElementById("p-nm").textContent = "";
+  document.getElementById("total").textContent = fmtMin(r.total);
+
+  const v = document.getElementById("verdict");
+  if (!r.ready) {
+    v.innerHTML = `<div class="tag">분석 중<span class="pill">${state.t.minMinutes}분부터</span></div><div class="desc">기록이 짧아 아직 판정하지 않습니다.</div>`;
+  } else {
+    v.innerHTML = `<div class="tag">${r.best.key} <span class="ko">- ${r.best.ko}</span></div>
+      <div class="desc">${r.best.desc}</div>
+      ${r.also.length ? `<div class="also">함께 해당: ${r.also.map(x => x.key).join(", ")}</div>` : ""}`;
+  }
+  const mx = Math.max(40, ...r.pct);
+  document.getElementById("bars").innerHTML = r.pct.map((p, i) =>
+    `<span style="height:${p / mx * 100}%;background:${colors[i]}" title="${ZN[i]} ${p.toFixed(0)}%"></span>`).join("");
+  document.getElementById("barsl").innerHTML = r.pct.map((p, i) =>
+    `<span><b style="color:var(--z${i + 1})">${ZN[i]}</b> ${p.toFixed(0)}%</span>`).join("");
+
+  document.getElementById("types").innerHTML = r.list.map((x, i) => `<li class="${x.ok ? "ok" : ""} ${r.ready && x === r.best ? "best" : ""}">
+      <span class="no">${i + 1}</span>
+      <span class="k">${x.key}</span>
+      <span class="n">${x.ko}<small>${x.why}</small></span>
+      <span class="m"><span class="meter"><i style="width:${(x.fit * 100).toFixed(0)}%"></i></span>${x.ok ? "충족" : (x.fit * 100).toFixed(0) + "%"}</span>
+    </li>`).join("");
+
+  drawDevice(r);
+  document.getElementById("mc").textContent = monkeyC();
+}
+
+// ---- 기기 미리보기 (심박앱 넓고 높은 칸 배치를 단순화) ----
+function drawDevice(r) {
+  const cv = document.getElementById("dev"), g = cv.getContext("2d");
+  const W = cv.width, H = cv.height, dark = state.dark;
+  const bg = dark ? "#000" : "#fff", fg = dark ? "#fff" : "#000", dim = dark ? "#AAAAAA" : "#555555";
+  const zcol = dark ? ["#AAAAAA", "#00AAFF", "#00FF00", "#FFAA00", "#FF5500", "#FF0000", "#FF55FF"]
+                    : ["#555555", "#0000FF", "#00AA00", "#FFAA00", "#FF5500", "#FF0000", "#AA00FF"];
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  const L = 24, R = W - 24;
+  // 타이틀
+  g.fillStyle = "#FF5500"; g.font = "700 26px 'Titillium Web'"; g.fillText("⚡", L, 40);
+  g.fillStyle = fg; g.fillText("zzPowerPlus", L + 26, 40);
+  // 현재 / 평균
+  g.font = "700 64px 'Titillium Web'"; g.textAlign = "center";
+  g.fillText("245", W * 0.28, 112); g.fillText("198", W * 0.72, 112);
+  g.font = "600 16px 'Titillium Web'"; g.fillStyle = dim;
+  g.fillText("W", W * 0.28 + 70, 70); g.fillText("AVG", W * 0.72 + 74, 70);
+  // 운동 형태 줄
+  g.font = "700 26px 'Titillium Web', 'IBM Plex Sans KR'";
+  g.fillStyle = r.ready ? fg : dim;
+  g.fillText(r.ready ? label(r.best) : "분석 중", W / 2, 158);
+  g.textAlign = "left";
+  // 히스토그램
+  const top = 186, bot = H - 30, bw = (R - L - 6 * 8) / 7, mx = Math.max(40, ...r.pct);
+  r.pct.forEach((p, i) => {
+    const x = L + i * (bw + 8), h = (bot - top - 18) * p / mx;
+    g.fillStyle = zcol[i]; g.fillRect(x, bot - h, bw, h);
+    g.fillStyle = fg; g.font = "600 14px 'Titillium Web'"; g.textAlign = "center";
+    g.fillText(p.toFixed(0) + "%", x + bw / 2, bot - h - 4);
+    g.textAlign = "left";
+  });
+  zcol.forEach((c, i) => { g.fillStyle = c; g.fillRect(L + i * (bw + 8), H - 22, bw, 8); });
+}
+
+function monkeyC() {
+  const t = state.t;
+  return `// tools/ptype (판정기)에서 생성. 우선순위 순서
+const PT_KEYS = [ ${TYPES.map(x => `"${x.key}"`).join(", ")} ];
+const PT_NAMES = [ ${TYPES.map(x => `"${x.ko}"`).join(", ")} ];   // 한글 글리프 폰트 필요
+// 문턱값 (분 / %)
+${Object.keys(t).map(k => `const T_${k.replace(/[A-Z]/g, c => "_" + c).toUpperCase()} = ${t[k]};`).join("\n")}`;
+}
+
+document.getElementById("copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(document.getElementById("mc").textContent); document.getElementById("copied").textContent = "복사했습니다"; }
+  catch (e) { document.getElementById("copied").textContent = "복사 실패: 직접 선택해 주세요"; }
+});
+document.fonts && document.fonts.ready.then(render);
+sync();
+</script>
+</body>
+</html>

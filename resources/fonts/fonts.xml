@@ -1,0 +1,43 @@
+<fonts>
+    <!-- Titillium Web Bold (zzCadence 와 같은 크기 표). tools/FntGen.java 로 생성 (% 는 막대 라벨용 18·24 에만):
+         glyphs " -.0123456789" (+ "%" for 18, 24)
+         java tools/FntGen.java tools/ttf/TitilliumWeb-Bold.ttf resources/fonts num " %-.0123456789" - 18 24
+         java tools/FntGen.java tools/ttf/TitilliumWeb-Bold.ttf resources/fonts num " -.0123456789" - 30 38 48 60 76 96 120 150 190 -->
+    <!-- 좁은 칸 존 번호 소수 표시용 가장 작은 크기 (숫자 높이 11) -->
+    <font id="NumTiny" filename="num-14.fnt" antialias="true"/>
+    <font id="Num18"  filename="num-18.fnt"  antialias="true"/>
+    <font id="Num24"  filename="num-24.fnt"  antialias="true"/>
+    <font id="Num30"  filename="num-30.fnt"  antialias="true"/>
+    <font id="Num38"  filename="num-38.fnt"  antialias="true"/>
+    <font id="Num48"  filename="num-48.fnt"  antialias="true"/>
+    <font id="Num60"  filename="num-60.fnt"  antialias="true"/>
+    <font id="Num76"  filename="num-76.fnt"  antialias="true"/>
+    <font id="Num96"  filename="num-96.fnt"  antialias="true"/>
+    <font id="Num120" filename="num-120.fnt" antialias="true"/>
+    <font id="Num150" filename="num-150.fnt" antialias="true"/>
+    <font id="Num190" filename="num-190.fnt" antialias="true"/>
+    <!-- 단위 "W" (1000W 이상은 2단 "k"/"W") (Num 숫자 높이의 40%, Plus 시리즈와 같은 비율). Num18 은 Unit9 를 같이 쓴다.
+         java tools/FntGen.java tools/ttf/TitilliumWeb-Bold.ttf resources/fonts unit "0kW" - 9 12 14 19 23 29 38 47 59 75 -->
+    <font id="Unit9" filename="unit-9.fnt" antialias="true"/>
+    <font id="Unit12" filename="unit-12.fnt" antialias="true"/>
+    <font id="Unit14" filename="unit-14.fnt" antialias="true"/>
+    <font id="Unit19" filename="unit-19.fnt" antialias="true"/>
+    <font id="Unit23" filename="unit-23.fnt" antialias="true"/>
+    <font id="Unit29" filename="unit-29.fnt" antialias="true"/>
+    <font id="Unit38" filename="unit-38.fnt" antialias="true"/>
+    <font id="Unit47" filename="unit-47.fnt" antialias="true"/>
+    <font id="Unit59" filename="unit-59.fnt" antialias="true"/>
+    <font id="Unit75" filename="unit-75.fnt" antialias="true"/>
+    <!-- 넓은 칸 (Plus 시리즈와 같은 크기, 540/840 기준). 다른 기기는 resources-edgeXXXX/fonts 가 덮어씀.
+         숫자 높이 / 타이틀 / 라벨: 540·840 35/13/10, 1040 42/15/12, 550·850 63/23/18, 1050·1060 72/26/21 -->
+    <font id="WideVal" filename="wideval-50.fnt" antialias="true"/>
+    <font id="WideTitle" filename="widetitle-17.fnt" antialias="true"/>
+    <font id="WideLabel" filename="widelabel-13.fnt" antialias="true"/>
+    <!-- 운동 형태 줄: 영문·숫자 Titillium SemiBold + 한글(운동 형태 이름) Noto Sans KR (tools/TidFont.py), 라벨과 같은 크기 -->
+    <font id="TidLabel" filename="tidlabel-10.fnt" antialias="true"/>
+    <!-- 10필드 칸 (Plus 시리즈 크기): 메인 / 보조 / 단위. 540·840 33/20, 1040 37/24, 550·850 56/36, 1050·1060 65/41 -->
+    <font id="C10Main" filename="c10main_34.fnt" antialias="true"/>
+    <font id="C10Sub" filename="c10sub-28.fnt" antialias="true"/>
+    <font id="C10UnitMain" filename="c10unitmain_8.fnt" antialias="true"/>
+    <font id="C10UnitSub" filename="c10unitsub-10.fnt" antialias="true"/>
+</fonts>

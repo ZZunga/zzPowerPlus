@@ -1,0 +1,11 @@
+<fonts>
+    <!-- 이 기기 크기의 넓은 칸 / 10필드 칸 / 운동 형태 폰트. 기본 resources/fonts 의 같은 id 를 덮어쓴다. -->
+    <font id="WideVal" filename="wideval-90.fnt" antialias="true"/>
+    <font id="WideTitle" filename="widetitle-32.fnt" antialias="true"/>
+    <font id="WideLabel" filename="widelabel-25.fnt" antialias="true"/>
+    <font id="TidLabel" filename="tidlabel-18.fnt" antialias="true"/>
+    <font id="C10Main" filename="c10main_65.fnt" antialias="true"/>
+    <font id="C10Sub" filename="c10sub-52.fnt" antialias="true"/>
+    <font id="C10UnitMain" filename="c10unitmain_14.fnt" antialias="true"/>
+    <font id="C10UnitSub" filename="c10unitsub-19.fnt" antialias="true"/>
+</fonts>

@@ -1,0 +1,73 @@
+[Title]
+zzPowerPlus - Power, Zone, NP, Time in Zone, Training Type
+
+[Description]
+A data field that shows your 3s power and power zone in big digits, and draws a histogram of the time spent in each of the 7 zones while you record.
+In large wide fields it also analyzes your time in zone so far and shows what kind of session you are riding (SST, VO2MAX, polarized and more).
+Built with the TitilliumWeb font for better readability on the move.
+A rebuilt version of zzPowerChart.
+
+- Needs a power meter. No phone connection required.
+- Please enter your FTP in the settings. It is used for power zones, IF and TSS.
+
+[Power and zone]
+- Current power in big digits that fill the field. Choose instant, 3s average (default) or 10s average.
+- Above 1000 W the value is shown as kW (e.g. 1.25) so the digits stay big.
+- Your current power zone (1 to 7) next to the bolt, big and in the zone color. Or show it as a decimal like 4.3 (setting).
+- Average (default), max, lap average, NP, IF or TSS in the top right corner (or none).
+- An arrow on the 7-zone color bar at the bottom points to your current power.
+
+[NP, IF, TSS, lap]
+- NP uses a 30 second rolling average. Zero watts (coasting) are included, paused time is not.
+- IF = NP / FTP, TSS = hours x IF² x 100
+- Lap average starts over each time you press the lap button (same as Garmin).
+
+[Time in zone histogram]
+- Time is collected per zone (7 zones) while the timer runs, and each bar shows that zone's share (%) of the total recorded time.
+- Paused and auto-paused time is left out.
+- Large wide fields show the percentage above each bar.
+- Bars can be striped (keeps the digits easy to read) or solid.
+- If the app restarts during a ride, the time in zone carries on.
+
+[Training type]
+- In large wide fields (1 or 2 field layouts), power and the second value go in the top half and the histogram in the bottom half.
+- After 10 minutes of recording, the training type is shown right under your power, based on your time in zone.
+  Example: SST - Sweet Spot
+- 13 types: POL Polarized, RACE Race Pace, BALANCE Balanced Ride, SPRINT Sprint, TABATA Tabata, HIIT Short HIIT, VO2MAX VO2max Intervals, SST Sweet Spot, TEMPO Tempo, FATMAX Long Fat Burn, BASE Base, RECOVERY Recovery Ride, EASY Easy Ride
+- The analysis only runs every 10 seconds in large wide fields, so other fields use no extra battery. It can be turned off in settings.
+
+[Colors]
+- Current power changes color when it is a set percentage above or below the second value (average etc.). Pick separate colors for above and below.
+- Choose "Power zone color" to always show your power in its zone color.
+- The background follows your device setting (white or black). Three choices in the settings:
+  match the device screen (default), plain black/white, or transparent - transparent paints no
+  background at all, so the device background shows through. If the data field looks slightly
+  off from the rest of the screen on an Edge 1050 or 1060, try transparent.
+
+[Power zones]
+- Calculated from your FTP: Coggan (55/75/90/105/120/150%, default) or Stages (59/79/90/104/120/150%)
+- Or enter the maximum power of zones 1 to 6 yourself.
+
+[Layouts, picked automatically]
+- One slot of the 10-field layout: bolt, zone and second value on top, large current power below.
+- Wide slots: zzPowerPlus title with the active value (AVG / MAX / LAP / NP / IF / TSS) on top, both values side by side at the same size below.
+- Large wide slots: the training type screen (or the wide layout if turned off).
+- Same typeface, sizes and layout as zzHeartPlus, zzSpeedPlus, zzCadencePlus and the rest of the series, so they look consistent side by side.
+
+[Recording]
+- Your current power zone is saved in the activity, so you can see it as a chart in Garmin Connect.
+- Time in each zone (%) is saved in the activity summary.
+
+[Supported devices]
+Edge 540 / 550 / 840 / 850 / 1040 / 1050 / 1060
+
+Change settings in the Garmin Connect IQ app or Garmin Express.
+
+[What's new]
+v1.0.1
+- Background setting added (match device screen / plain black & white / transparent)
+  Addresses the data field background not matching built-in fields on Edge 1050/1060.
+- In wide fields the % labels above the bars are dropped when the training-type line is shown (fixes the field drawing blank)
+- Edge 1060 launcher icon size fixed
+v1.0.0
+- First release

@@ -1,0 +1,42 @@
+<properties>
+    <property id="appVersion" type="string">1.0.1</property>
+
+    <!-- 메인 값: 0=순간 1=3초 평균(기본) 2=10초 평균 -->
+    <property id="mainDataMode" type="number">1</property>
+    <!-- 오른쪽 위 보조값: 0=평균 1=최대 2=랩 평균 3=NP 4=IF 5=TSS 6=없음 -->
+    <property id="dataMode" type="number">0</property>
+
+    <!-- FTP (W). 파워존 계산과 IF·TSS 에 씀 -->
+    <property id="FTP" type="number">200</property>
+    <!-- 파워존 계산: 0=Coggan(55/75/90/105/120/150%) 1=Stages(59/79/90/104/120/150%) -->
+    <property id="calcTypePZ" type="number">0</property>
+    <!-- 파워존 직접 입력 (켜면 FTP 계산 대신 사용). 각 존 최대 W -->
+    <property id="manualPowerZone" type="boolean">false</property>
+    <property id="Zone1maxValue" type="number">110</property>
+    <property id="Zone2maxValue" type="number">150</property>
+    <property id="Zone3maxValue" type="number">180</property>
+    <property id="Zone4maxValue" type="number">210</property>
+    <property id="Zone5maxValue" type="number">240</property>
+    <property id="Zone6maxValue" type="number">300</property>
+
+    <!-- 하단 존 띠 + 현재 위치 화살표 / 존별 시간 % 히스토그램 -->
+    <property id="powerZoneBar" type="boolean">true</property>
+    <property id="powerZoneHistory" type="boolean">true</property>
+    <!-- 막대 모양: 0=줄무늬 1=채움 / 막대 위 % 숫자 -->
+    <property id="histStyle" type="number">0</property>
+    <property id="showPct" type="boolean">true</property>
+    <!-- 운동 형태: 넓고 높은 칸에서 위쪽 절반 값 + 운동 형태, 아래쪽 절반 히스토그램 -->
+    <property id="typeAnalysis" type="boolean">true</property>
+
+    <!-- 좌측 상단 번개 + 현재 존 / 존 소수 표시 (4.3). 기본은 정수 (큰 글씨) -->
+    <property id="showIcon" type="boolean">true</property>
+    <property id="zoneDecimal" type="boolean">false</property>
+
+    <!-- 색 테마: 보조값 대비 threshold% 넘게 높으면 colorHigh, 낮으면 colorLow -->
+    <property id="threshold" type="number">5</property>
+    <property id="colorHigh" type="number">0</property>
+    <property id="colorLow" type="number">0</property>
+
+    <!-- 배경색: 0=기기 화면색에 맞춤 1=검정/흰색 그대로(기본) 2=투명(안 칠함) -->
+    <property id="bgMode" type="number">1</property>
+</properties>

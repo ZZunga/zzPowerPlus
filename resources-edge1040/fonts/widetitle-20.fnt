@@ -1,0 +1,27 @@
+info face="Titillium Web SemiBold" size=-20 bold=0 italic=0 charset="" unicode=1 stretchH=100 smooth=1 aa=2 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight=18 base=16 scaleW=225 scaleH=15 pages=1 packed=0 alphaChnl=0 redChnl=0 greenChnl=0 blueChnl=0
+page id=0 file="widetitle-20_0.png"
+chars count=23
+char id=122 x=0    y=0    width=9    height=10   xoffset=0    yoffset=5    xadvance=9    page=0 chnl=15
+char id=80  x=10   y=0    width=11   height=14   xoffset=1    yoffset=1    xadvance=12   page=0 chnl=15
+char id=111 x=22   y=0    width=10   height=12   xoffset=0    yoffset=4    xadvance=11   page=0 chnl=15
+char id=119 x=33   y=0    width=15   height=10   xoffset=0    yoffset=5    xadvance=15   page=0 chnl=15
+char id=101 x=49   y=0    width=10   height=12   xoffset=0    yoffset=4    xadvance=10   page=0 chnl=15
+char id=114 x=60   y=0    width=6    height=11   xoffset=1    yoffset=4    xadvance=7    page=0 chnl=15
+char id=108 x=67   y=0    width=3    height=15   xoffset=1    yoffset=0    xadvance=5    page=0 chnl=15
+char id=117 x=71   y=0    width=9    height=11   xoffset=1    yoffset=5    xadvance=11   page=0 chnl=15
+char id=115 x=81   y=0    width=9    height=12   xoffset=0    yoffset=4    xadvance=9    page=0 chnl=15
+char id=43  x=91   y=0    width=10   height=10   xoffset=1    yoffset=5    xadvance=11   page=0 chnl=15
+char id=48  x=102  y=0    width=11   height=15   xoffset=0    yoffset=1    xadvance=11   page=0 chnl=15
+char id=49  x=114  y=0    width=8    height=14   xoffset=1    yoffset=1    xadvance=11   page=0 chnl=15
+char id=50  x=123  y=0    width=9    height=14   xoffset=1    yoffset=1    xadvance=11   page=0 chnl=15
+char id=51  x=133  y=0    width=9    height=15   xoffset=1    yoffset=1    xadvance=11   page=0 chnl=15
+char id=52  x=143  y=0    width=11   height=14   xoffset=0    yoffset=1    xadvance=11   page=0 chnl=15
+char id=53  x=155  y=0    width=10   height=15   xoffset=1    yoffset=1    xadvance=11   page=0 chnl=15
+char id=54  x=166  y=0    width=11   height=15   xoffset=0    yoffset=1    xadvance=11   page=0 chnl=15
+char id=55  x=178  y=0    width=9    height=15   xoffset=1    yoffset=1    xadvance=11   page=0 chnl=15
+char id=56  x=188  y=0    width=11   height=15   xoffset=0    yoffset=1    xadvance=11   page=0 chnl=15
+char id=57  x=200  y=0    width=11   height=15   xoffset=0    yoffset=1    xadvance=11   page=0 chnl=15
+char id=46  x=212  y=0    width=3    height=3    xoffset=1    yoffset=12   xadvance=5    page=0 chnl=15
+char id=45  x=216  y=0    width=7    height=3    xoffset=1    yoffset=8    xadvance=8    page=0 chnl=15
+char id=32  x=224  y=0    width=0    height=0    xoffset=0    yoffset=0    xadvance=4    page=0 chnl=15
