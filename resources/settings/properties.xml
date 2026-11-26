@@ -1,5 +1,5 @@
 <properties>
-    <property id="appVersion" type="string">1.0.1</property>
+    <property id="appVersion" type="string">1.0.2</property>
 
     <!-- 메인 값: 0=순간 1=3초 평균(기본) 2=10초 평균 -->
     <property id="mainDataMode" type="number">1</property>
