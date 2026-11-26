@@ -23,6 +23,14 @@ class zzPowerPlusView extends WatchUi.DataField {
     hidden var mZoneF = null;       // 존 번호 중간 크기 폰트 (좁은 칸) / 큰 폰트 (넓은 칸)
     hidden var mTinyF = null;       // 존 번호 가장 작은 폰트 (좁은 칸)
     hidden var mBg = Graphics.COLOR_WHITE;   // 번개 테두리(배경색) 용
+    // 그리기 공통값: 인자로 넘기면 호출마다 스택을 먹는다 (데이터 필드 스택은 RAM 과 별개로 작다)
+    hidden var mBig = false;        // 1050/1060 (화면폭 480 이상)
+    hidden var mCfg = null;
+    hidden var mDark = false;
+    hidden var mFg = Graphics.COLOR_BLACK;
+    hidden var mDim = Graphics.COLOR_DK_GRAY;
+    hidden var mBucket = 0;
+    hidden var mBoltColor = Graphics.COLOR_ORANGE;
     hidden var mSubUnitF = null;
 
     hidden var mCur = null;      // 1초 파워
@@ -223,6 +231,7 @@ class zzPowerPlusView extends WatchUi.DataField {
         var w = dc.getWidth();
         var h = dc.getHeight();
         var screenW = System.getDeviceSettings().screenWidth;
+        mBig = (screenW >= 480);
         var hasSec = (cfg.secondary != Config.SEC_NONE);
         // 칸이 바뀌면 안 쓰는 폰트는 내려놓는다 (메모리)
         mFontCache = new [Layout.NFONTS];
@@ -249,12 +258,10 @@ class zzPowerPlusView extends WatchUi.DataField {
                 }
             }
             if (mFrame.tid) {
-                // 메모리: TID 폰트(글리프 수백 자)와 % 숫자 폰트를 함께 올리면
-                // 넓은 칸에서 한도를 넘어 폰트 로드가 실패한다. TID 줄을 쓰면 % 숫자는 생략.
-                mFrame.pctIdx = -1;
                 mTidFont = WatchUi.loadResource(Rez.Fonts.TidLabel);
                 PType.update();
-            } else if (mFrame.pctIdx >= 0) {
+            }
+            if (mFrame.pctIdx >= 0) {
                 font(mFrame.pctIdx);   // 그리는 도중 로드하지 않도록 미리 올려둔다
             }
         } else {
@@ -308,8 +315,7 @@ class zzPowerPlusView extends WatchUi.DataField {
         var bg = getBackgroundColor();
         var sysClear = (bg == Graphics.COLOR_TRANSPARENT);   // 기기가 "투명"이라고 알려준 경우
         var dark = (bg == Graphics.COLOR_BLACK || sysClear);
-        var big = (System.getDeviceSettings().screenWidth >= 480);
-        var soft = big && (cfg.bgMode != Config.BG_PLAIN);
+        var soft = mBig && (cfg.bgMode != Config.BG_PLAIN);
         var fg;
         if (dark) {
             bg = soft ? 0x17181D : Graphics.COLOR_BLACK;
@@ -335,15 +341,22 @@ class zzPowerPlusView extends WatchUi.DataField {
 
         var bucket = Zones.bucketOf(mZone);
 
+        mCfg = cfg;
+        mDark = dark;
+        mFg = fg;
+        mDim = dim;
+        mBucket = bucket;
+        mBoltColor = boltColor;
+
         if (f.wide) {
-            drawWide(dc, f, cfg, dark, bucket, fg, dim, boltColor);
+            drawWide(dc, f);
             return;
         }
 
         // ---- 좁은 칸 ----
         // 배경 히스토그램 + 하단 존 띠 (좁은 칸은 % 숫자 없음)
         if (f.stripH > 0) {
-            drawHistogram(dc, f, cfg, dark, bucket, [], dim, fg);
+            drawHistogram(dc, f, []);
         }
 
         // 번개 + 존 번호 (보조값과 같은 크기)
@@ -371,7 +384,7 @@ class zzPowerPlusView extends WatchUi.DataField {
                     zf = mTinyF; zcap = Layout.TINY_CAP;
                 }
                 if (zf != null) {
-                    dc.setColor((mZone != null && mZone >= 1.0) ? zoneColor(bucket, dark) : dim, Graphics.COLOR_TRANSPARENT);
+                    dc.setColor((mZone != null && mZone >= 1.0) ? zoneColor(bucket) : dim, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(f.zoneX, f.zoneTop + f.subCap - zcap, zf, zs, Graphics.TEXT_JUSTIFY_LEFT);
                 }
             }
@@ -389,7 +402,7 @@ class zzPowerPlusView extends WatchUi.DataField {
 
         // 메인 파워 (오른쪽 아래) + 단위. 색 테마 적용.
         //  1000W 이상: 큰 정수 + 작은 소수 두 자리(보조값 글씨, 바닥선 맞춤) + 2단 "k"/"W"
-        dc.setColor(mainColor(cfg, dark, fg, bucket), Graphics.COLOR_TRANSPARENT);
+        dc.setColor(mainColor(), Graphics.COLOR_TRANSPARENT);
         var kw = (mPow != null && mPow >= 999.5);
         if (kw && f.c10 && mSubF != null) {
             var n = ((mPow + 5) / 10).toNumber();                 // 0.01 kW 단위
@@ -439,7 +452,7 @@ class zzPowerPlusView extends WatchUi.DataField {
     }
 
     // 존별 시간 비율 막대. 막대 높이 = 비율 x 사용 가능 높이 (100% 면 칸 위까지).
-    hidden function drawHistogram(dc, f, cfg, dark, cur, blocks, dim, fg) {
+    hidden function drawHistogram(dc, f, blocks) {
         var w = f.w;
         var base = f.histBase;
         var avail = base - f.histTop;
@@ -449,14 +462,14 @@ class zzPowerPlusView extends WatchUi.DataField {
         for (var i = 0; i < Zones.N; i++) {
             var x0 = (w * i) / Zones.N;
             var x1 = (w * (i + 1)) / Zones.N;
-            var color = zoneColor(i, dark);
+            var color = zoneColor(i);
 
             dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-            if (cfg.showBar) {
+            if (mCfg.showBar) {
                 dc.fillRectangle(x0, base, x1 - x0 - 1, f.stripH);
             }
 
-            if (!cfg.showHist || total <= 0) {
+            if (!mCfg.showHist || total <= 0) {
                 continue;
             }
             var r = Zones.ratio(i);
@@ -465,8 +478,8 @@ class zzPowerPlusView extends WatchUi.DataField {
             var bw = x1 - x0 - 2;
             var top = base - bh;
             if (bh > 0) {
-                if (cfg.histStyle == Config.HIST_SOLID) {
-                    dc.setColor(barSolid(i, dark), Graphics.COLOR_TRANSPARENT);
+                if (mCfg.histStyle == Config.HIST_SOLID) {
+                    dc.setColor(barSolid(i), Graphics.COLOR_TRANSPARENT);
                     dc.fillRectangle(bx, top, bw, bh);
                 } else {
                     dc.setPenWidth(1);
@@ -498,21 +511,21 @@ class zzPowerPlusView extends WatchUi.DataField {
                     }
                 }
                 if (!hit) {
-                    dc.setColor(dim, Graphics.COLOR_TRANSPARENT);
+                    dc.setColor(mDim, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, ly, pctFont, label, Graphics.TEXT_JUSTIFY_CENTER);
                 }
             }
         }
 
         // 현재 파워 위치 화살표 (존 바 화살표). 존 안의 소수 위치까지 반영.
-        if (cfg.showBar && mZone != null) {
+        if (mCfg.showBar && mZone != null) {
             var a = f.stripH + 2;
             var pos = mZone - 1.0;
             if (pos < 0.0) { pos = 0.0; }
             var cxp = (w * pos / Zones.N).toNumber();
             if (cxp < a) { cxp = a; }
             if (cxp > w - a) { cxp = w - a; }
-            dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
             dc.fillPolygon([[cxp - a, base - a], [cxp, base], [cxp + a, base - a]]);
         }
     }
@@ -520,11 +533,11 @@ class zzPowerPlusView extends WatchUi.DataField {
     // ---- 넓은 칸 ----------------------------------------------------------
     //  [⚡ 4 zzPowerPlus                  AVG W]
     //  [     245          |       198         ]   두 값 같은 크기 (보조값 없음이면 가운데 하나)
-    hidden function drawWide(dc, f, cfg, dark, bucket, fg, dim, boltColor) {
-        var hasSec = (cfg.secondary != Config.SEC_NONE);
+    hidden function drawWide(dc, f) {
+        var hasSec = (mCfg.secondary != Config.SEC_NONE);
         var vFont = (f.valIdx < 0) ? mWideVal : font(f.valIdx);
         var hrStr = fmtPow(mPow);
-        var sStr = hasSec ? secStr(cfg.secondary) : null;
+        var sStr = hasSec ? secStr(mCfg.secondary) : null;
 
         // % 라벨이 피할 사각형: 타이틀 줄 + 값 두 개
         var blocks = [];
@@ -542,45 +555,45 @@ class zzPowerPlusView extends WatchUi.DataField {
             blocks.add([0, f.tidY - 2, f.w, f.histTop]);   // 운동 형태 줄은 히스토그램 위쪽
         }
         if (f.stripH > 0) {
-            drawHistogram(dc, f, cfg, dark, bucket, blocks, dim, fg);
+            drawHistogram(dc, f, blocks);
         }
 
         // 타이틀 줄: 번개 + 존 번호(존 색) + 앱 이름 / 오른쪽 회색 라벨
         if (f.showTitle) {
             var tcap = Layout.WIDE_TCAP[f.fam];
             var x = f.inset;
-            if (cfg.showIcon) {
+            if (mCfg.showIcon) {
                 if (f.bigZone && mZoneF != null) {
-                    drawBoltGlyph(dc, x, f.heartY, f.heartSize, f.zoneY, Layout.C10_SCAP[f.fam], mZoneF, boltColor);
+                    drawBoltGlyph(dc, x, f.heartY, f.heartSize, f.zoneY, Layout.C10_SCAP[f.fam], mZoneF, mBoltColor);
                 } else {
-                    drawBolt(dc, x, f.heartY, f.heartSize, boltColor);
+                    drawBolt(dc, x, f.heartY, f.heartSize, mBoltColor);
                 }
                 x += f.heartSize + (tcap * 0.3).toNumber();
-                var zs = zoneStr(cfg.zoneDecimal);
+                var zs = zoneStr(mCfg.zoneDecimal);
                 var zf = (f.bigZone && mZoneF != null) ? mZoneF : mWideTitle;
-                dc.setColor((mZone != null && mZone >= 1.0) ? zoneColor(bucket, dark) : dim, Graphics.COLOR_TRANSPARENT);
+                dc.setColor((mZone != null && mZone >= 1.0) ? zoneColor(mBucket) : mDim, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(x, f.zoneY, zf, zs, Graphics.TEXT_JUSTIFY_LEFT);
                 x += dc.getTextWidthInPixels(zs, zf) + (tcap * 0.5).toNumber();
             }
-            var label = secLabelWide(cfg.secondary);
+            var label = secLabelWide(mCfg.secondary);
             var lw = dc.getTextWidthInPixels(label, mWideLabel);
             var title = f.shortTitle ? "zzPower+" : "zzPowerPlus";
             if (!f.shortTitle && x + dc.getTextWidthInPixels(title, mWideTitle) > f.titleRight - lw - 4) {
                 title = "zzPower+";                       // 존 번호가 커서 긴 이름이 안 들어가면 짧은 이름
             }
             if (x + dc.getTextWidthInPixels(title, mWideTitle) <= f.titleRight - lw - 4) {
-                dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
+                dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(x, f.titleY, mWideTitle, title, Graphics.TEXT_JUSTIFY_LEFT);
             }
-            dc.setColor(dim, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(mDim, Graphics.COLOR_TRANSPARENT);
             dc.drawText(f.titleRight, f.labelY, mWideLabel, label, Graphics.TEXT_JUSTIFY_RIGHT);
         }
 
         // 값: 현재 파워(색 테마) | 보조값. 같은 폰트, 같은 크기. 1000W 이상은 "1.25" (kW)
-        dc.setColor(mainColor(cfg, dark, fg, bucket), Graphics.COLOR_TRANSPARENT);
+        dc.setColor(mainColor(), Graphics.COLOR_TRANSPARENT);
         dc.drawText(x1, f.valY, vFont, hrStr, Graphics.TEXT_JUSTIFY_CENTER);
         if (hasSec) {
-            dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
             dc.drawText(f.xc2, f.valY, vFont, sStr, Graphics.TEXT_JUSTIFY_CENTER);
         }
 
@@ -590,7 +603,7 @@ class zzPowerPlusView extends WatchUi.DataField {
             var lx = x1 - w1 / 2;
             var ty = f.tidY - Layout.TID_PAD[f.fam];       // 폰트 위쪽 여유만큼 올려 그림 (글자 윗선 = tidY)
             if (!PType.ready || PType.best < 0) {
-                dc.setColor(dim, Graphics.COLOR_TRANSPARENT);
+                dc.setColor(mDim, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(lx, ty, mTidFont, WatchUi.loadResource(Rez.Strings.ptAnalyzing), Graphics.TEXT_JUSTIFY_LEFT);
             } else {
                 var head = PType.head();
@@ -600,10 +613,10 @@ class zzPowerPlusView extends WatchUi.DataField {
                 if (lx + hw + tw > right) {
                     lx = f.inset;                          // 길면 칸 왼쪽 여백부터
                 }
-                dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
+                dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(lx, ty, mTidFont, head, Graphics.TEXT_JUSTIFY_LEFT);
                 if (lx + hw + tw <= right) {               // 그래도 길면 이름은 생략
-                    dc.setColor(dim, Graphics.COLOR_TRANSPARENT);
+                    dc.setColor(mDim, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(lx + hw, ty, mTidFont, tail, Graphics.TEXT_JUSTIFY_LEFT);
                 }
             }
@@ -623,41 +636,41 @@ class zzPowerPlusView extends WatchUi.DataField {
     // 메인 숫자 색. 높음/낮음 색이 기본이면 글자색.
     // 보조값(평균/최대/랩평균/NP, 그 외는 평균) 대비 threshold% 넘게 높으면 colorHigh, 낮으면 colorLow.
     // 둘 중 하나라도 "파워존 색"이면 항상 현재 존 색.
-    hidden function mainColor(cfg, dark, fg, bucket) {
-        if (cfg.colorHigh == Config.COLOR_ZONE || cfg.colorLow == Config.COLOR_ZONE) {
-            return (mZone != null && mZone >= 1.0) ? zoneColor(bucket, dark) : fg;
+    hidden function mainColor() {
+        if (mCfg.colorHigh == Config.COLOR_ZONE || mCfg.colorLow == Config.COLOR_ZONE) {
+            return (mZone != null && mZone >= 1.0) ? zoneColor(mBucket) : mFg;
         }
-        if (mPow == null || (cfg.colorHigh == Config.COLOR_DEFAULT && cfg.colorLow == Config.COLOR_DEFAULT)) {
-            return fg;
+        if (mPow == null || (mCfg.colorHigh == Config.COLOR_DEFAULT && mCfg.colorLow == Config.COLOR_DEFAULT)) {
+            return mFg;
         }
-        var ref = secIsPower(cfg.secondary) ? secValue(cfg.secondary) : mAvg;
+        var ref = secIsPower(mCfg.secondary) ? secValue(mCfg.secondary) : mAvg;
         if (ref == null || ref <= 0) {
-            return fg;
+            return mFg;
         }
-        var d = ref * cfg.threshold / 100.0;
+        var d = ref * mCfg.threshold / 100.0;
         var sel = Config.COLOR_DEFAULT;
         if (mPow > ref + d) {
-            sel = cfg.colorHigh;
+            sel = mCfg.colorHigh;
         } else if (mPow < ref - d) {
-            sel = cfg.colorLow;
+            sel = mCfg.colorLow;
         }
-        var c = themeColor(sel, dark);
-        return (c != null) ? c : fg;
+        var c = themeColor(sel);
+        return (c != null) ? c : mFg;
     }
 
     // zzPowerChart getColor() 와 같은 색 (검정 배경용, 흰 배경용)
-    hidden function themeColor(sel, dark) {
+    hidden function themeColor(sel) {
         switch (sel) {
-            case Config.COLOR_RED:          return dark ? Graphics.COLOR_RED : Graphics.COLOR_DK_RED;
+            case Config.COLOR_RED:          return mDark ? Graphics.COLOR_RED : Graphics.COLOR_DK_RED;
             case Config.COLOR_ORANGE:       return Graphics.COLOR_ORANGE;
             case Config.COLOR_YELLOW:       return Graphics.COLOR_YELLOW;
-            case Config.COLOR_YELLOWORANGE: return dark ? Graphics.COLOR_YELLOW : Graphics.COLOR_ORANGE;
-            case Config.COLOR_GREEN:        return dark ? Graphics.COLOR_GREEN : Graphics.COLOR_DK_GREEN;
-            case Config.COLOR_BLUE:         return dark ? Graphics.COLOR_BLUE : Graphics.COLOR_DK_BLUE;
+            case Config.COLOR_YELLOWORANGE: return mDark ? Graphics.COLOR_YELLOW : Graphics.COLOR_ORANGE;
+            case Config.COLOR_GREEN:        return mDark ? Graphics.COLOR_GREEN : Graphics.COLOR_DK_GREEN;
+            case Config.COLOR_BLUE:         return mDark ? Graphics.COLOR_BLUE : Graphics.COLOR_DK_BLUE;
             case Config.COLOR_PURPLE:       return Graphics.COLOR_PURPLE;
             case Config.COLOR_PINK:         return Graphics.COLOR_PINK;
-            case Config.COLOR_PINKRED:      return dark ? Graphics.COLOR_PINK : Graphics.COLOR_DK_RED;
-            case Config.COLOR_GRAY:         return dark ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_DK_GRAY;
+            case Config.COLOR_PINKRED:      return mDark ? Graphics.COLOR_PINK : Graphics.COLOR_DK_RED;
+            case Config.COLOR_GRAY:         return mDark ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_DK_GRAY;
             default:                        return null;
         }
     }
@@ -665,28 +678,28 @@ class zzPowerPlusView extends WatchUi.DataField {
     // ---- helpers -------------------------------------------------
 
     // 존 색 (7존): 회색 / 파랑 / 초록 / 노랑 / 주황 / 빨강 / 보라
-    hidden function zoneColor(i, dark) {
+    hidden function zoneColor(i) {
         switch (i) {
-            case 0:  return dark ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_DK_GRAY;
-            case 1:  return dark ? Graphics.COLOR_BLUE    : Graphics.COLOR_DK_BLUE;
-            case 2:  return dark ? Graphics.COLOR_GREEN   : Graphics.COLOR_DK_GREEN;
+            case 0:  return mDark ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_DK_GRAY;
+            case 1:  return mDark ? Graphics.COLOR_BLUE    : Graphics.COLOR_DK_BLUE;
+            case 2:  return mDark ? Graphics.COLOR_GREEN   : Graphics.COLOR_DK_GREEN;
             case 3:  return Graphics.COLOR_YELLOW;
             case 4:  return Graphics.COLOR_ORANGE;
-            case 5:  return dark ? Graphics.COLOR_RED     : Graphics.COLOR_DK_RED;
-            default: return dark ? Graphics.COLOR_PINK    : Graphics.COLOR_PURPLE;
+            case 5:  return mDark ? Graphics.COLOR_RED     : Graphics.COLOR_DK_RED;
+            default: return mDark ? Graphics.COLOR_PINK    : Graphics.COLOR_PURPLE;
         }
     }
 
     // 채움 막대는 숫자가 보이도록 옅은 색
-    hidden function barSolid(i, dark) {
+    hidden function barSolid(i) {
         switch (i) {
-            case 0:  return dark ? 0x333333 : 0xDDDDDD;
-            case 1:  return dark ? 0x0A2A40 : 0xD0D0FF;
-            case 2:  return dark ? 0x0A3A0A : 0xCCEECC;
-            case 3:  return dark ? 0x40380A : 0xFFEECC;
-            case 4:  return dark ? 0x40250A : 0xFFDCCC;
-            case 5:  return dark ? 0x4D0A0A : 0xEECCCC;
-            default: return dark ? 0x3A0A40 : 0xEED0FF;
+            case 0:  return mDark ? 0x333333 : 0xDDDDDD;
+            case 1:  return mDark ? 0x0A2A40 : 0xD0D0FF;
+            case 2:  return mDark ? 0x0A3A0A : 0xCCEECC;
+            case 3:  return mDark ? 0x40380A : 0xFFEECC;
+            case 4:  return mDark ? 0x40250A : 0xFFDCCC;
+            case 5:  return mDark ? 0x4D0A0A : 0xEECCCC;
+            default: return mDark ? 0x3A0A40 : 0xEED0FF;
         }
     }
 
@@ -727,7 +740,7 @@ class zzPowerPlusView extends WatchUi.DataField {
     }
 
     hidden function secValue(kind) {
-        var cfg = Config.read();
+        var mCfg = Config.read();
         if (kind == Config.SEC_AVG) { return mAvg; }
         if (kind == Config.SEC_MAX) { return mMax; }
         if (kind == Config.SEC_LAP) {
@@ -735,8 +748,8 @@ class zzPowerPlusView extends WatchUi.DataField {
             return (l != null) ? l : mCur;                  // 새 랩 첫 1초는 0 대신 현재 파워
         }
         if (kind == Config.SEC_NP)  { return Power.np(); }
-        if (kind == Config.SEC_IF)  { return Power.intensity(cfg.ftp); }
-        if (kind == Config.SEC_TSS) { return Power.tss(cfg.ftp); }
+        if (kind == Config.SEC_IF)  { return Power.intensity(mCfg.ftp); }
+        if (kind == Config.SEC_TSS) { return Power.tss(mCfg.ftp); }
         return null;
     }
 

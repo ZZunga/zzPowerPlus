@@ -67,7 +67,7 @@ Change settings in the Garmin Connect IQ app or Garmin Express.
 v1.0.1
 - Background setting added (match device screen / plain black & white / transparent)
   Addresses the data field background not matching built-in fields on Edge 1050/1060.
-- In wide fields the % labels above the bars are dropped when the training-type line is shown (fixes the field drawing blank)
+- Fixed the field not drawing in wide, tall layouts
 - Edge 1060 launcher icon size fixed
 v1.0.0
 - First release
